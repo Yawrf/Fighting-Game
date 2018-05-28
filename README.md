@@ -1,4 +1,4 @@
 # Fighting Game
 
-# Current Issues:
-1. Scanner adds New Line
+# Description
+Just an experiment in making a text based fighting game, nothing special.
