@@ -19,7 +19,8 @@ public class FightingGame {
         GUI gui = new GUI();
         
         System.out.println(gui);
-        
+        gui.changeState(GUI.State.Greeting);
+        System.out.println(gui);
     }
     
 }

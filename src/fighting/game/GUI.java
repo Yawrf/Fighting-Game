@@ -13,12 +13,13 @@ import java.util.Scanner;
  */
 public class GUI {
     
-    private enum State {
+    public enum State {
         Greeting,
         FirstGreeting;
     }
     
     private State currentState = State.FirstGreeting;
+    private Character character;
     
     private int width = 75; 
     private int capSize = 2;
@@ -29,12 +30,18 @@ public class GUI {
     private char closePart = '>';
     private Scanner ui = new Scanner(System.in);
     
+    public void changeState(State state) {
+        currentState = state;
+    }
+    
     @Override
     public String toString() {
         String output = "";
         
         switch(currentState) {
             case FirstGreeting: output += FirstGreetingGUI();
+                break;
+            case Greeting: output += GreetingGUI();
                 break;
         }
         
@@ -45,6 +52,7 @@ public class GUI {
     
     
     // Construction Methods
+    
     private String FirstGreetingGUI() {
         String output = "";
         int buffer = 3;
@@ -52,32 +60,27 @@ public class GUI {
         output += divider();
         String[] temp = {"Name: ???", "Please Enter Your Name"};
         output += partitionedLine(temp, buffer);
-        for(int i = 0; i < capSize; ++i) {
-            output += verBar;
-        }
-        for(int i = 0; i < (width - (2 * capSize)) / 4; ++i) {
-            output += space;
-        }
-        for(int i = 0; i < capSize; ++i) {
-            output += openPart;
-        }
+        output += divider();
+        
         String prompt = "Name: ";
         output += prompt;
         System.out.print(output);
-        String name = ui.next();
-        output = "";
-        for(int i = 0; i < capSize; ++i) {
-            output += closePart;
-        }
-        for(int i = 0; i < ((width - (2 * capSize)) * 3) / 4 - (2 * capSize) - prompt.length() - name.length(); ++i) {
-            output += space;
-        }
-        for(int i = 0; i < capSize; ++i) {
-            output += verBar;
-        }
-        output += '\n';
-        output += divider();
+        String name = ui.nextLine();
         
+        character = Character.getInstance(name);
+        
+        output = " ";
+        return output;
+    }
+    
+    private String GreetingGUI() {
+        String output = "";
+        
+        output += divider();
+        String message = "Hello, ";
+        message += character.getName();
+        output += bodyLine(message);
+        output += divider();
         
         return output;
     }
