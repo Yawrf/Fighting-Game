@@ -9,7 +9,7 @@ package fighting.game;
  *
  * @author rewil
  */
-public class Character {
+public class Character extends Identifiable {
     
     private final String name;
     private static Character instance;

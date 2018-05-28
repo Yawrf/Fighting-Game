@@ -11,7 +11,7 @@ import java.util.Scanner;
  *
  * @author rewil
  */
-public class GUI {
+public class GUI extends Identifiable {
     
     public enum State {
         Greeting,
