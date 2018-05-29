@@ -5,6 +5,8 @@
  */
 package fighting.game;
 
+import java.util.Random;
+
 /**
  *
  * @author rewil

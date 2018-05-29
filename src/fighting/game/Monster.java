@@ -113,6 +113,33 @@ public class Monster extends Identifiable {
         return defend;
     }
     
+    /**
+     * Returns the amount of gold won by defeating the monster
+     * @return 
+     */
+    public int deathGold() {
+        int gold = 0;
+        
+        gold += maxHealth;
+        gold += strength * 5;
+        gold += defense * 5;
+        gold += speed * 5;
+        
+        return gold;
+    }
+    
+    /**
+     * Returns the amount of Exp won by defeating the monster
+     * @return 
+     */
+    public int deathExp() {
+        int exp = 100;
+        
+        exp += level*50;
+        
+        return exp;
+    }
+    
     // Tools - Combat
     
     /**

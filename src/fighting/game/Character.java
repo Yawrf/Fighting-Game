@@ -21,13 +21,15 @@ public class Character extends Identifiable {
     
     private int maxHealth = 10;
     private int health = maxHealth;
-    private int strength = 2;
+    private int strength = 1;
     private int defense = 1;
     private int speed = 1;
     
+    private int pointsPerLevel = 2;
     private int level = 1;
     private int nextExp = calculateNextExp();
     private int currentExp = 0;
+    private int gold = 0;
     
     /**
      * Creates a Character instance with the name n
@@ -172,6 +174,30 @@ public class Character extends Identifiable {
         while(currentExp >= nextExp) {
             changeLevel(level + 1);
         }
+    }
+    
+    /**
+     * Get the current gold owned by Character
+     * @return 
+     */
+    public int getGold() {
+        return gold;
+    }
+    
+    /**
+     * Change the amount of gold owned by character
+     * @param g 
+     */
+    public void changeGold(int g) {
+        gold = g;
+    }
+    
+    /**
+     * Get the number of stat points earned per level
+     * @return 
+     */
+    public int getPointsPerLevel() {
+        return pointsPerLevel;
     }
     
     // Stats - Fundamental

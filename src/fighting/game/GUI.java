@@ -17,19 +17,10 @@ import java.util.logging.Logger;
  */
 public class GUI extends Identifiable {
     
-    public enum State {
-        FirstGreeting,
-        Greeting,
-        Battle,
-        Attacking,
-        Defending,
-        Fleeing,
-        
-        GameOver;
-    }
-    
     private State currentState = State.FirstGreeting;
     private Character character;
+    
+    private final int regenChance = 3;
     
     private final int width = 75; 
     private final int capSize = 2;
@@ -66,6 +57,22 @@ public class GUI extends Identifiable {
     }
     
     
+    public enum State {
+        FirstGreeting,
+        Greeting,
+        Passive,
+        Battle,
+        Attacking,
+        Defending,
+        Fleeing,
+        BattleWon,
+        Fled,
+        
+        LevelUp,
+        Dead,
+        GameOver;
+    }
+    
     @Override
     public String toString() {
         String output = "";
@@ -75,31 +82,69 @@ public class GUI extends Identifiable {
                 break;
             case Greeting: output += GreetingGUI();
                 break;
+            case Passive: output += PassiveGUI();
+                break;
             case Battle: {
                 try {
-                        output += BattleGUI();
-                    } catch (Unidentified e) {
-                        System.out.println(escapeChar + "[31m" + e.getMessage());
-                        System.exit(0);
-                    }
+                    output += BattleGUI();
+                } catch (Unidentified e) {
+                    System.out.println(escapeChar + "[31m" + "Battle Error: " + e.getMessage());
+                    System.exit(0);
                 }
+            }
                 break;
             case Attacking: {
-                    try {
-                        output += AttackingGUI();
-                    } catch (Unidentified ex) {
-                        Logger.getLogger(GUI.class.getName()).log(Level.SEVERE, null, ex);
-                    }
+                try {
+                    output += AttackingGUI();
+                } catch (Unidentified e) {
+                    System.out.println(escapeChar + "[31m" + "Attacking Error: " + e.getMessage());
                 }
+            }
                 break;
+            case Defending: {
+                try {
+                    output += DefendingGUI();
+                } catch (Unidentified e) {
+                    System.out.println(escapeChar + "[31m" + "Defending Error: " + e.getMessage());
+                }
+            }
+                break;
+            case Fleeing: {
+                try {
+                    output += FleeingGUI();
+                } catch(Unidentified e) {
+                    System.out.println(escapeChar + "[31m" + "Fleeing Error: " + e.getMessage());
+                }
+            }
+                break;
+            case BattleWon: {
+                try {
+                    output += BattleWonGUI();
+                } catch(Unidentified e) {
+                    System.out.println(escapeChar + "[31m" + "BattleWon Error: " + e.getMessage());
+                }
+            }
+                break;
+            case Fled: output += FledGUI();
                 
                 
+            case LevelUp: {
+                try {
+                    output += LevelUpGUI();
+                } catch (Unidentified e) {
+                    System.out.println(escapeChar + "[31m" + "LevelUp Error: " + e.getMessage());
+                }
+            }
+                break;
+            case Dead: output += DeadGUI();
+                break;
             case GameOver: output += GameOverGUI();
                 break;
         }
         
         return output;
     }
+    
     
     // User Interface Elements
     
@@ -115,6 +160,11 @@ public class GUI extends Identifiable {
         return name;
     }
     
+    /**
+     * Fetches and returns a State, using the options given in BattleGUI; MUST BE UPDATED IF OPTIONS ARE CHANGED
+     * @return
+     * @throws Unidentified 
+     */
     private State selectBattleOption() throws Unidentified {
         
         System.out.print("Select Option: ");
@@ -126,6 +176,25 @@ public class GUI extends Identifiable {
             default: throw new Unidentified("Answer Unknown");
         }
         
+    }
+    
+    /**
+     * Fetches and upgrades a Character Stat
+     * @throws Unidentified 
+     */
+    private void statLevelUp() throws Unidentified {
+        System.out.print("Select Option: ");
+        switch(ui.nextLine().toLowerCase()) {
+            case "a": character.changeStrength(character.getStrength() + 1);
+                break;
+            case "b": character.changeDefense(character.getDefense() + 1);
+                break;
+            case "c": character.changeSpeed(character.getSpeed() + 1);
+                break;
+            case "d": character.changeMaxHealth(character.getMaxHealth() + 5);
+                break;
+            default: throw new Unidentified("Answer Unknown");
+        }
     }
     
     // Construction Methods
@@ -170,6 +239,14 @@ public class GUI extends Identifiable {
         return output;
     }
     
+    private String PassiveGUI() {
+        String output = "";
+        
+        changeState(State.Battle);
+        
+        return output;
+    }
+    
     private ArrayList<Integer> monsterIDs = new ArrayList<>();
     private Integer monsterID = null;
     /**
@@ -190,7 +267,7 @@ public class GUI extends Identifiable {
         String[] strength = {"Str: " + character.getStrength(), "Str: " + m.getStrength()};
         String[] defense = {"Def: " + character.getDefense(), "Def: " + m.getDefense()};
         String[] speed = {"Spd: " + character.getSpeed(), "Spd: " + m.getSpeed()};
-        String[] exp = {"Lvl: " + character.getLevel(), character.getExp() + "/" + character.getNextExp() + " EXP"};
+        String[] goldExp = {"Gold: " + character.getGold(), "Lvl: " + character.getLevel(), character.getExp() + "/" + character.getNextExp() + " EXP"};
         String message = "Select an option";
         String[] options = {"A: Attack", "B: Defend", "C: Flee"};
         
@@ -200,7 +277,7 @@ public class GUI extends Identifiable {
         output += partitionedLine(strength);
         output += partitionedLine(defense);
         output += partitionedLine(speed);
-        output += partitionedLine(exp, 3);
+        output += partitionedLine(goldExp, 3);
         output += bodyLine(message);
         output += optionsLine(options);
         
@@ -227,37 +304,252 @@ public class GUI extends Identifiable {
         if(attackDamage < 0) {
             attackDamage = 0;
         }
-        String attack = character.getName() + " attacks " + m.getName() + " for " + escapeChar + "[31m" + attackDamage + escapeChar + "[30m" + " damage.\n";
+        String attack = character.getName() + " attacks " + m.getName() + " for " + escapeChar + "[31m" + attackDamage + escapeChar + "[30m" + " damage.";
         m.changeHealth(m.getHealth() - attackDamage);
-        output += attack;
+        output += bodyLine(attack);
         if(m.getHealth() > 0) {
             int defenseDamage = (m.attack() - character.defend());
             if(defenseDamage < 0) {
                 defenseDamage = 0;
             }
-            String defense = m.getName() + " attacks " + character.getName() + " for " + escapeChar + "[31m" + defenseDamage + escapeChar + "[30m" + " damage.\n";
+            String defense = m.getName() + " attacks " + character.getName() + " for " + escapeChar + "[31m" + defenseDamage + escapeChar + "[30m" + " damage.";
             character.changeHealth(character.getHealth() - defenseDamage);
-            output += defense;
+            output += bodyLine(defense);
         }
         if(character.getHealth() > 0 && character.getHealth() < character.getMaxHealth()) {
-            if(rand.nextBoolean()) {
+            if(rand.nextInt(regenChance) == 0) {
                 int regen = rand.nextInt(character.getDefense()) + 1;
                 int temp = (character.getHealth() + regen) - character.getMaxHealth();
                 if(temp > 0){
                     regen -= temp;
                 }
                 character.changeHealth(character.getHealth() + regen);
-                output += character.getName() + " passively regenerates " + escapeChar + "[32m" + regen + escapeChar + "[30m" + " HP.\n";
+                String regeneration = character.getName() + " passively regenerates " + escapeChar + "[32m" + regen + escapeChar + "[30m" + " HP.";
+                output += bodyLine(regeneration);
             }
         }
         
         output += divider();
-        changeState(State.Battle);
+        if(m.getHealth() <= 0) {
+            changeState(State.BattleWon);
+        }
+        else if(character.getHealth() <= 0) {
+            changeState(State.Dead);
+        }
+        else {
+            changeState(State.Battle);
+        }
+        
+        return output;
+    }
+    
+    /**
+     * Runs if currentState is Defending; this calculates the damage done to the character, then checks for passive regeneration; multiplies defense by defenseMultiplier, and regen chance and regen amount by regenMultiplier
+     * @return
+     * @throws Unidentified 
+     */
+    private String DefendingGUI() throws Unidentified {
+        String output = "";
+        
+        int defenseMultiplier = 2;
+        int regenMultiplier = 2;
+        Monster m = Distributor.getMonster(monsterID);
+        
+        output += divider();
+        String message = character.getName() + " defends.";
+        output += bodyLine(message);
+        int defenseDamage = (m.attack() - (defenseMultiplier * character.defend()));
+        if(defenseDamage < 0) {
+            defenseDamage = 0;
+        }
+        String defense = m.getName() + " attacks " + character.getName() + " for " + escapeChar + "[31m" + defenseDamage + escapeChar + "[30m" + " damage.";
+        character.changeHealth(character.getHealth() - defenseDamage);
+        output += bodyLine(defense);
+        if(character.getHealth() > 0 && character.getHealth() < character.getMaxHealth()) {
+            if(rand.nextInt(regenChance / regenMultiplier) == 0) {
+                int regen = rand.nextInt(character.getDefense()) + 1;
+                regen *= regenMultiplier;
+                int temp = (character.getHealth() + regen) - character.getMaxHealth();
+                if(temp > 0){
+                    regen -= temp;
+                }
+                character.changeHealth(character.getHealth() + regen);
+                String regeneration = character.getName() + " passively regenerates " + escapeChar + "[32m" + regen + escapeChar + "[30m" + " HP.";
+                output += bodyLine(regeneration);
+            }
+        }
+        output += divider();
+        
+        if(character.getHealth() > 0) {
+            changeState(State.Battle);
+        }
+        else {
+            changeState(State.Dead);
+        }
+        
+        return output;
+    }
+    
+    /**
+     * Runs if currentState is Fleeing; this compares the speed stats of the Character and the Monster to determine a success; if the attempt fails the monster attacks and it checks for regen
+     * @return
+     * @throws Unidentified 
+     */
+    private String FleeingGUI() throws Unidentified {
+        String output = "";
+        
+        Monster m = Distributor.getMonster(monsterID);
+        double chance = (double)character.getSpeed()/(double)(character.getSpeed() + m.getSpeed());
+        boolean success = rand.nextDouble() <= chance;
+        
+        System.out.println(chance + " " + success);
+        
+        output += divider();
+        String message = character.getName() + " tries to flee.";
+        output += bodyLine(message);
+        if(success) {
+            output += bodyLine("Success!");
+            changeState(State.Fled);
+            m.setDefeated();
+        }
+        else {
+            output += bodyLine("Attempt Failed");
+            int defenseDamage = (m.attack() - character.defend());
+            if(defenseDamage < 0) {
+                defenseDamage = 0;
+            }
+            String defense = m.getName() + " attacks " + character.getName() + " for " + escapeChar + "[31m" + defenseDamage + escapeChar + "[30m" + " damage.";
+            character.changeHealth(character.getHealth() - defenseDamage);
+            output += bodyLine(defense);
+            if(character.getHealth() > 0 && character.getHealth() < character.getMaxHealth()) {
+                if(rand.nextInt(regenChance) == 0) {
+                    int regen = rand.nextInt(character.getDefense()) + 1;
+                    int temp = (character.getHealth() + regen) - character.getMaxHealth();
+                    if(temp > 0){
+                        regen -= temp;
+                    }
+                    character.changeHealth(character.getHealth() + regen);
+                    String regeneration = character.getName() + " passively regenerates " + escapeChar + "[32m" + regen + escapeChar + "[30m" + " HP.";
+                    output += bodyLine(regeneration);
+                }
+            }
+            if(character.getHealth() > 0) {
+                changeState(State.Battle);
+            }
+            else {
+                changeState(State.Dead);
+            }
+        }
+        output += divider();
+        
+        return output;
+    }
+    
+    /**
+     * Runs if currentState is BattleWon; this calculates how much gold and Exp were earned by defeating the monster, applies them to the character, then checks for a level up
+     * @return
+     * @throws Unidentified 
+     */
+    private String BattleWonGUI() throws Unidentified {
+        String output = "";
+        
+        int earnedBuffer = 5;
+        int updateBuffer = 3;
+        
+        int level = character.getLevel();
+        
+        output += divider();
+        Monster m = Distributor.getMonster(monsterID);
+        String message = m.getName() + " is defeated!";
+        output += bodyLine(message);
+        String gold = m.deathGold() + " gold earned";
+        character.changeGold(character.getGold() + m.deathGold());
+        String exp = m.deathExp() + " Exp earned";
+        character.changeExp(character.getExp() + m.deathExp());
+        String[] strings = {gold, exp};
+        output += partitionedLine(strings, earnedBuffer);
+        String[] goldExp = {"Gold: " + character.getGold(), "Lvl: " + character.getLevel(), character.getExp() + "/" + character.getNextExp() + " EXP"};
+        output += partitionedLine(goldExp, updateBuffer);
+        m.setDefeated();
+        output += divider();
+        
+        if(character.getLevel() > level) {
+            changeState(State.LevelUp);
+        }
+        else {
+            changeState(State.Passive);
+        }
+        
+        return output;
+    }
+    
+    /**
+     * Runs if currentState is Fled; this announces that they successfully ran away, then defaults to Passive state
+     * @return 
+     */
+    private String FledGUI() {
+        String output = "";
+        
+        output += divider();
+        String message = "You successfully ran away!";
+        output += bodyLine(message);
+        output += divider();
+        changeState(State.Passive);
         
         return output;
     }
     
     
+    
+    /**
+     * Runs if currentState is LevelUp; this announces that they Leveled Up and prompts them to upgrade stats
+     * @return
+     * @throws Unidentified 
+     */
+    private String LevelUpGUI() throws Unidentified {
+        String output = "";
+        
+        for(int i = 0; i < character.getPointsPerLevel(); ++i) {
+            output += divider();
+            String levelup = escapeChar + "[32m" + "Level Up!" + escapeChar + "[30m";
+            String[] stats = {"Str: " + character.getStrength(), "Def: " + character.getDefense(), "Spd: " + character.getSpeed(), "Max Health: " + character.getMaxHealth()};
+            String[] options = {"A: +1 Str", "B: +1 Def", "C: +1 Spd", "D: +5 Max Health"};
+            String points = escapeChar + "[34m" + (character.getPointsPerLevel() - i) + escapeChar + "[30m" + " points remaining";
+            output += bodyLine(levelup);
+            output += partitionedLine(stats);
+            output += bodyLine(points);
+            output += optionsLine(options);
+            System.out.println(output);
+            statLevelUp();
+            output = "";
+        }
+        character.changeHealth(character.getMaxHealth());
+        changeState(State.Passive);
+        
+        return output;
+    }
+    
+    /**
+     * Runs if currentState is Dead; this reads off the final stats of the character, then defaults to GameOver state
+     * @return 
+     */
+    private String DeadGUI() {
+        String output = "";
+        
+        output += divider();
+        String message = escapeChar + "[31m" + "You Died" + escapeChar + "[30m";
+        output += bodyLine(message);
+        String[] finalStatsBasic = {"Str: " + character.getStrength(), "Def: " + character.getDefense(), "Spd: " + character.getSpeed()};
+        String finalHealth = character.getHealth() + "/" + character.getMaxHealth() + " HP";
+        String[] finalStatsSpecial = {"Gold: " + character.getGold(), "Lvl: " + character.getLevel(), character.getExp() + "/" + character.getNextExp() + " Exp"};
+        output += partitionedLine(finalStatsBasic);
+        output += bodyLine(finalHealth);
+        output += partitionedLine(finalStatsSpecial);
+        output += divider();
+        changeState(State.GameOver);
+        
+        return output;
+    }
     
     /**
      * Runs if currentState is GameOver; this merely says Game Over
