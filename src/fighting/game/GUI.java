@@ -188,7 +188,7 @@ public class GUI extends Identifiable {
         for(int i = 0; i < whiteSpace; ++i) {
             output += space;
         }
-        if((length % 2 != width % 2) && (length < width)) {
+        if(length % 2 != width % 2) {
             output += space;
         }
         for(int i = 0; i < capSize; ++i) {
