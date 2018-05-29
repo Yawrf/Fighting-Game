@@ -17,10 +17,11 @@ public class FightingGame {
     public static void main(String[] args) {
         // TODO code application logic here
         GUI gui = new GUI();
+        while(gui.getState() != GUI.State.GameOver) {
+            System.out.println(gui);
+        }
+        System.out.println(gui);
         
-        System.out.println(gui);
-        gui.changeState(GUI.State.Greeting);
-        System.out.println(gui);
     }
     
 }

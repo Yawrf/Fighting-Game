@@ -22,9 +22,10 @@ public class Distributor {
     
     /**
      * Adds a GUI to the GUI map, keyed to its ID
-     * @param g 
+     * @param g GUI added
+     * @return The ID of the GUI stored
      */
-    public static void addGUI(GUI g) {
+    public static int addGUI(GUI g) {
         
         int id = g.getID();
         if(GUIs.containsKey(id)) {
@@ -32,17 +33,31 @@ public class Distributor {
             g.changeID(id);
         }
         GUIs.put(id, g);
-        
+        return id;
     }
     
-    public static GUI getGUI(int id) {
-        
-        GUI g = GUIs.get(id);
-        
+    /**
+     * Gets a GUI from the list by the given key
+     * @param id Key of the wanted GUI
+     * @return 
+     * @throws Unidentified 
+     */
+    public static GUI getGUI(int id) throws Unidentified {
+        GUI g;
+        if(GUIs.containsKey(id)) {
+            g = GUIs.get(id);
+        }
+        else {
+            throw new Unidentified("Object not found in Map");
+        }
         return g;
     }
     
-    public static int newGUIID() {
+    /**
+     * Creates a new ID for a GUI that isn't already being used in the Map
+     * @return 
+     */
+    private static int newGUIID() {
         
         int temp = rand.nextInt();
         while(temp < 0 || GUIs.containsKey(temp)) {
@@ -52,7 +67,12 @@ public class Distributor {
         return temp;
     }
     
-    public static void addCharacter(Character c) {
+    /**
+     * Adds a Character to the Character map, keyed to its ID
+     * @param c Character added
+     * @return The ID of the Character stored
+     */
+    public static int addCharacter(Character c) {
         
         int id = c.getID();
         if(Characters.containsKey(id)) {
@@ -60,17 +80,31 @@ public class Distributor {
             c.changeID(id);
         }
         Characters.put(id, c);
-        
+        return id;
     }
     
-    public static Character getCharacter(int id) {
-        
-        Character c = Characters.get(id);
-        
+    /**
+     * Gets a Character from the list by the given key
+     * @param id Key of the wanted Character
+     * @return
+     * @throws Unidentified 
+     */
+    public static Character getCharacter(int id) throws Unidentified {
+        Character c;
+        if(Characters.containsKey(id)) {
+            c = Characters.get(id);
+        }
+        else {
+            throw new Unidentified("Object not found in Map");
+        }
         return c;
     }
     
-    public static int newCharacterID() {
+    /**
+     * Creates a new ID for a Character that isn't already being used in the Map
+     * @return 
+     */
+    private static int newCharacterID() {
         
         int temp = rand.nextInt();
         while(temp < 0 || Characters.containsKey(temp)) {

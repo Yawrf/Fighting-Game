@@ -14,8 +14,10 @@ import java.util.Scanner;
 public class GUI extends Identifiable {
     
     public enum State {
+        FirstGreeting,
         Greeting,
-        FirstGreeting;
+        
+        GameOver;
     }
     
     private State currentState = State.FirstGreeting;
@@ -28,10 +30,29 @@ public class GUI extends Identifiable {
     private char space = ' ';
     private char openPart = '<';
     private char closePart = '>';
+    
+    private char escapeChar = (char)27;
+    private int escapeSize = 5;
     private Scanner ui = new Scanner(System.in);
     
+    public GUI() {
+        Distributor.addGUI(this);
+    }
+    
+    /**
+     * Changes the state of the GUI, controls how it functions
+     * @param state 
+     */
     public void changeState(State state) {
         currentState = state;
+    }
+    
+    /**
+     * Gets the state of the GUI
+     * @return 
+     */
+    public State getState() {
+        return currentState;
     }
     
     @Override
@@ -43,6 +64,8 @@ public class GUI extends Identifiable {
                 break;
             case Greeting: output += GreetingGUI();
                 break;
+            case GameOver: output += GameOverGUI();
+                break;
         }
         
         return output;
@@ -50,9 +73,24 @@ public class GUI extends Identifiable {
     
     // User Interface Elements
     
+    /**
+     * Fetches and returns a Name, using the current line and ending with a new one
+     * @return 
+     */
+    private String getName() {
+        String prompt = "Name: ";
+        System.out.print(prompt);
+        String name = ui.nextLine();
+        
+        return name;
+    }
     
     // Construction Methods
     
+    /**
+     * Runs if currentState is FirstGreeting; this establishes a name for the character
+     * @return 
+     */
     private String FirstGreetingGUI() {
         String output = "";
         int buffer = 3;
@@ -60,19 +98,22 @@ public class GUI extends Identifiable {
         output += divider();
         String[] temp = {"Name: ???", "Please Enter Your Name"};
         output += partitionedLine(temp, buffer);
+        output += bodyLine("This line is too long. This line is too long. This line is too long. This line is too long. This line is too long. This line is too long. This line is too long. ");
         output += divider();
-        
-        String prompt = "Name: ";
-        output += prompt;
         System.out.print(output);
-        String name = ui.nextLine();
+        String name = getName();
+        character = new Character(name);
         
-        character = Character.getInstance(name);
+        changeState(State.Greeting);
         
         output = " ";
         return output;
     }
     
+    /**
+     * Runs if currentState is Greeting; this merely says Hello, followed by their name.
+     * @return 
+     */
     private String GreetingGUI() {
         String output = "";
         
@@ -82,10 +123,27 @@ public class GUI extends Identifiable {
         output += bodyLine(message);
         output += divider();
         
+        changeState(State.GameOver);
+        
         return output;
     }
     
     
+    
+    /**
+     * Runs if currentState is GameOver; this merely says Game Over
+     * @return 
+     */
+    private String GameOverGUI() {
+        String output = "";
+        
+        output += divider();
+        output += bodyLine("Game");
+        output += bodyLine("Over");
+        output += divider();
+        
+        return output;
+    }
     
     // Construction Elements
     
@@ -106,13 +164,18 @@ public class GUI extends Identifiable {
     
     /**
      * Prints the body area given a String to use
-     * @param middle Body Text
+     * @param message Body Text
      * @return 
      */
-    private String bodyLine(String middle) {
+    private String bodyLine(String message) {
         String output = "";
         
-        int length = middle.length();
+        int length = message.length();
+        for(char c : message.toCharArray()) {
+            if (c == escapeChar) {
+                length -= escapeSize;
+            }
+        }
         int whiteSpace = (width - length - (2*capSize))/2;
         
         for(int i = 0; i < capSize; ++i) {
@@ -121,11 +184,11 @@ public class GUI extends Identifiable {
         for(int i = 0; i < whiteSpace; ++i) {
             output += space;
         }
-        output += middle;
+        output += message;
         for(int i = 0; i < whiteSpace; ++i) {
             output += space;
         }
-        if(length % 2 != width % 2) {
+        if((length % 2 != width % 2) && (length < width)) {
             output += space;
         }
         for(int i = 0; i < capSize; ++i) {
@@ -143,7 +206,7 @@ public class GUI extends Identifiable {
      */
     private String optionsLine(String[] strings) {
         String output = "";
-        
+        String[] newStrings = new String[strings.length];
         for(int s = 0; s < strings.length; ++s) {
             String temp = "";
             for(int i = 0; i < capSize; ++i) {
@@ -155,23 +218,28 @@ public class GUI extends Identifiable {
             for(int i = 0; i < capSize; ++i) {
                 temp += closePart;
             }
-            strings[s] = temp;
+            newStrings[s] = temp;
         }
         int length = 0;
-        for(String s : strings) {
+        for(String s : newStrings) {
             length += s.length();
+            for(char c : s.toCharArray()) {
+                if (c == escapeChar) {
+                    length -= escapeSize;
+                }
+            }
         }
-        int whiteSpace = (width - length) / (strings.length - 1);
+        int whiteSpace = (width - length) / (newStrings.length - 1);
         
-        for(int i = 0; i < strings.length; ++i) {
-            output += strings[i];
-            if(i != strings.length - 1) {
+        for(int i = 0; i < newStrings.length; ++i) {
+            output += newStrings[i];
+            if(i != newStrings.length - 1) {
                 for(int j = 0; j < whiteSpace; ++j) {
                     output += space;
                 }
             }
-            if(i == strings.length / 2) {
-                for(int j = 0; j < (width - length) % (strings.length - 1); ++j) {
+            if(i == newStrings.length / 2) {
+                for(int j = 0; j < (width - length) % (newStrings.length - 1); ++j) {
                     output += space;
                 }
             }
@@ -188,7 +256,8 @@ public class GUI extends Identifiable {
      * @return 
      */
     private String partitionedLine(String[] strings) {
-            String output = "";
+        String output = "";
+        String[] newStrings = new String[strings.length];
         
         for(int s = 0; s < strings.length; ++s) {
             String temp = "";
@@ -201,23 +270,28 @@ public class GUI extends Identifiable {
             for(int i = 0; i < capSize; ++i) {
                 temp += verBar;
             }
-            strings[s] = temp;
+            newStrings[s] = temp;
         }
         int length = 0;
-        for(String s : strings) {
+        for(String s : newStrings) {
             length += s.length();
+            for(char c : s.toCharArray()) {
+                if (c == escapeChar) {
+                    length -= escapeSize;
+                }
+            }
         }
-        int whiteSpace = (width - length) / (strings.length - 1);
+        int whiteSpace = (width - length) / (newStrings.length - 1);
         
-        for(int i = 0; i < strings.length; ++i) {
-            output += strings[i];
-            if(i != strings.length - 1) {
+        for(int i = 0; i < newStrings.length; ++i) {
+            output += newStrings[i];
+            if(i != newStrings.length - 1) {
                 for(int j = 0; j < whiteSpace; ++j) {
                     output += space;
                 }
             }
-            if(i == strings.length / 2) {
-                for(int j = 0; j < (width - length) % (strings.length - 1); ++j) {
+            if(i == newStrings.length / 2) {
+                for(int j = 0; j < (width - length) % (newStrings.length - 1); ++j) {
                     output += space;
                 }
             }
@@ -273,6 +347,11 @@ public class GUI extends Identifiable {
         int length = 0;
         for(String s : newStrings) {
             length += s.length();
+            for(char c : s.toCharArray()) {
+                if (c == escapeChar) {
+                    length -= escapeSize;
+                }
+            }
         }
         int whiteSpace = (width - length) / (newStrings.length - 1);
         
