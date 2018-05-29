@@ -15,7 +15,7 @@ public class Identifiable {
     
     private int id;
     
-    public Identifiable() {
+    protected Identifiable() {
         Random rand = new Random();
         id = rand.nextInt();
         while(id < 0) {

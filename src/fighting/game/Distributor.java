@@ -18,6 +18,7 @@ public class Distributor {
     
     private final static HashMap<Integer, GUI> GUIs = new HashMap<>();
     private final static HashMap<Integer, Character> Characters = new HashMap<>();
+    private final static HashMap<Integer, Monster> Monsters = new HashMap<>();
     
     
     /**
@@ -114,5 +115,51 @@ public class Distributor {
         return temp;
     }
     
+     /**
+     * Adds a Monster to the Monster map, keyed to its ID
+     * @param m Monster added
+     * @return The ID of the Monster stored
+     */
+    public static int addMonster(Monster m) {
+        
+        int id = m.getID();
+        if(Monsters.containsKey(id)) {
+            id = newCharacterID();
+            m.changeID(id);
+        }
+        Monsters.put(id, m);
+        return id;
+    }
+    
+    /**
+     * Gets a Monster from the list by the given key
+     * @param id Key of the wanted Monster
+     * @return
+     * @throws Unidentified 
+     */
+    public static Monster getMonster(int id) throws Unidentified {
+        Monster m;
+        if(Monsters.containsKey(id)) {
+            m = Monsters.get(id);
+        }
+        else {
+            throw new Unidentified("Object not found in Map");
+        }
+        return m;
+    }
+    
+    /**
+     * Creates a new ID for a Monster that isn't already being used in the Map
+     * @return 
+     */
+    private static int newMonsterID() {
+        
+        int temp = rand.nextInt();
+        while(temp < 0 || Monsters.containsKey(temp)) {
+            temp = rand.nextInt();
+        }
+        
+        return temp;
+    }
     
 }

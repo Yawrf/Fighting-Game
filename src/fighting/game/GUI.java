@@ -5,7 +5,11 @@
  */
 package fighting.game;
 
+import java.util.ArrayList;
+import java.util.Random;
 import java.util.Scanner;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 /**
  *
@@ -16,6 +20,10 @@ public class GUI extends Identifiable {
     public enum State {
         FirstGreeting,
         Greeting,
+        Battle,
+        Attacking,
+        Defending,
+        Fleeing,
         
         GameOver;
     }
@@ -23,19 +31,21 @@ public class GUI extends Identifiable {
     private State currentState = State.FirstGreeting;
     private Character character;
     
-    private int width = 75; 
-    private int capSize = 2;
-    private char horBar = '~';
-    private char verBar = '|';
-    private char space = ' ';
-    private char openPart = '<';
-    private char closePart = '>';
+    private final int width = 75; 
+    private final int capSize = 2;
+    private final char horBar = '~';
+    private final char verBar = '|';
+    private final char space = ' ';
+    private final char openPart = '<';
+    private final char closePart = '>';
     
-    private char escapeChar = (char)27;
-    private int escapeSize = 5;
-    private Scanner ui = new Scanner(System.in);
+    private final char escapeChar = (char)27;
+    private final int escapeSize = 5;
+    private final Random rand = new Random();
+    private final Scanner ui = new Scanner(System.in);
     
     public GUI() {
+        super();
         Distributor.addGUI(this);
     }
     
@@ -55,6 +65,7 @@ public class GUI extends Identifiable {
         return currentState;
     }
     
+    
     @Override
     public String toString() {
         String output = "";
@@ -64,6 +75,25 @@ public class GUI extends Identifiable {
                 break;
             case Greeting: output += GreetingGUI();
                 break;
+            case Battle: {
+                try {
+                        output += BattleGUI();
+                    } catch (Unidentified e) {
+                        System.out.println(escapeChar + "[31m" + e.getMessage());
+                        System.exit(0);
+                    }
+                }
+                break;
+            case Attacking: {
+                    try {
+                        output += AttackingGUI();
+                    } catch (Unidentified ex) {
+                        Logger.getLogger(GUI.class.getName()).log(Level.SEVERE, null, ex);
+                    }
+                }
+                break;
+                
+                
             case GameOver: output += GameOverGUI();
                 break;
         }
@@ -85,6 +115,19 @@ public class GUI extends Identifiable {
         return name;
     }
     
+    private State selectBattleOption() throws Unidentified {
+        
+        System.out.print("Select Option: ");
+        String temp = ui.nextLine();
+        switch(temp.toLowerCase()) {
+            case "a": return State.Attacking;
+            case "b": return State.Defending;
+            case "c": return State.Fleeing;
+            default: throw new Unidentified("Answer Unknown");
+        }
+        
+    }
+    
     // Construction Methods
     
     /**
@@ -98,7 +141,6 @@ public class GUI extends Identifiable {
         output += divider();
         String[] temp = {"Name: ???", "Please Enter Your Name"};
         output += partitionedLine(temp, buffer);
-        output += bodyLine("This line is too long. This line is too long. This line is too long. This line is too long. This line is too long. This line is too long. This line is too long. ");
         output += divider();
         System.out.print(output);
         String name = getName();
@@ -123,7 +165,94 @@ public class GUI extends Identifiable {
         output += bodyLine(message);
         output += divider();
         
-        changeState(State.GameOver);
+        changeState(State.Battle);
+        
+        return output;
+    }
+    
+    private ArrayList<Integer> monsterIDs = new ArrayList<>();
+    private Integer monsterID = null;
+    /**
+     * Runs if currentState is Battle; this states the names of the Character and the Monster, then the current stats of the Character and Monster, and gives options for how to continue
+     * @return
+     * @throws Unidentified 
+     */
+    private String BattleGUI() throws Unidentified {
+        String output = "";
+        
+        if(monsterID == null || Distributor.getMonster(monsterID).getDefeated()) {
+            monsterID = new Goblin().getID();
+            monsterIDs.add(monsterID);
+        }
+        Monster m = Distributor.getMonster(monsterID);
+        String[] names = {character.getName(), m.getName()};
+        String[] health = {character.getHealth() + "/" + character.getMaxHealth() + " HP", m.getHealth() + "/" + m.getMaxHealth() + " HP"};
+        String[] strength = {"Str: " + character.getStrength(), "Str: " + m.getStrength()};
+        String[] defense = {"Def: " + character.getDefense(), "Def: " + m.getDefense()};
+        String[] speed = {"Spd: " + character.getSpeed(), "Spd: " + m.getSpeed()};
+        String[] exp = {"Lvl: " + character.getLevel(), character.getExp() + "/" + character.getNextExp() + " EXP"};
+        String message = "Select an option";
+        String[] options = {"A: Attack", "B: Defend", "C: Flee"};
+        
+        output += divider();
+        output += partitionedLine(names);
+        output += partitionedLine(health);
+        output += partitionedLine(strength);
+        output += partitionedLine(defense);
+        output += partitionedLine(speed);
+        output += partitionedLine(exp, 3);
+        output += bodyLine(message);
+        output += optionsLine(options);
+        
+        System.out.println(output);
+        changeState(selectBattleOption());
+        
+        output = "\n";
+        
+        return output;
+    }
+    
+    /**
+     * Runs if currentState is Attacking; this calculates the damage the Character does to the Monster, then vice versa if it's still alive, then checks for passive regeneration; Damage numbers are in red, regen is in green.
+     * @return
+     * @throws Unidentified 
+     */
+    private String AttackingGUI() throws Unidentified {
+        String output = "";
+        
+        Monster m = Distributor.getMonster(monsterID);
+        output += divider();
+        
+        int attackDamage = (character.attack() - m.defend());
+        if(attackDamage < 0) {
+            attackDamage = 0;
+        }
+        String attack = character.getName() + " attacks " + m.getName() + " for " + escapeChar + "[31m" + attackDamage + escapeChar + "[30m" + " damage.\n";
+        m.changeHealth(m.getHealth() - attackDamage);
+        output += attack;
+        if(m.getHealth() > 0) {
+            int defenseDamage = (m.attack() - character.defend());
+            if(defenseDamage < 0) {
+                defenseDamage = 0;
+            }
+            String defense = m.getName() + " attacks " + character.getName() + " for " + escapeChar + "[31m" + defenseDamage + escapeChar + "[30m" + " damage.\n";
+            character.changeHealth(character.getHealth() - defenseDamage);
+            output += defense;
+        }
+        if(character.getHealth() > 0 && character.getHealth() < character.getMaxHealth()) {
+            if(rand.nextBoolean()) {
+                int regen = rand.nextInt(character.getDefense()) + 1;
+                int temp = (character.getHealth() + regen) - character.getMaxHealth();
+                if(temp > 0){
+                    regen -= temp;
+                }
+                character.changeHealth(character.getHealth() + regen);
+                output += character.getName() + " passively regenerates " + escapeChar + "[32m" + regen + escapeChar + "[30m" + " HP.\n";
+            }
+        }
+        
+        output += divider();
+        changeState(State.Battle);
         
         return output;
     }

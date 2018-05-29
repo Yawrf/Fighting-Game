@@ -21,15 +21,20 @@ public class Character extends Identifiable {
     
     private int maxHealth = 10;
     private int health = maxHealth;
-    private int strength = 1;
+    private int strength = 2;
     private int defense = 1;
     private int speed = 1;
+    
+    private int level = 1;
+    private int nextExp = calculateNextExp();
+    private int currentExp = 0;
     
     /**
      * Creates a Character instance with the name n
      * @param n Name of character
      */
     public Character(String n) {
+        super();
         name = n;
         Distributor.addCharacter(this);
     }
@@ -66,7 +71,7 @@ public class Character extends Identifiable {
         return defend;
     }
     
-    // Tools
+    // Tools - Combat
     
     /**
      * Rolls a die with the specified number of sides
@@ -93,8 +98,21 @@ public class Character extends Identifiable {
         return temp;
     }
     
+    // Tools - Levelling
     
-    // Stats
+    /**
+     * Calculates the Exp needed for the next level based on the current level
+     * @return 
+     */
+    private int calculateNextExp() {
+        int temp = 0;
+        for(int i = 0; i <= level; ++i) {
+            temp += 1000 * i;
+        }
+        return temp;
+    }
+    
+    // Stats - Special
     
     /**
      * Gets the name of the Character
@@ -103,6 +121,60 @@ public class Character extends Identifiable {
     public String getName() {
         return (char)27 + "[34m" + name + (char)27 + "[30m";
     }
+    
+    /**
+     * Get the current Level
+     * @return 
+     */
+    public int getLevel() {
+        return level;
+    }
+    
+    /**
+     * Change the current Level
+     * @param l 
+     */
+    private void changeLevel(int l) {
+        level = l;
+        changeNextExp(calculateNextExp());
+    }
+    
+    /**
+     * Get the amount of Exp needed for the next Level
+     * @return 
+     */
+    public int getNextExp() {
+        return nextExp;
+    }
+    
+    /**
+     * Change the amount of Exp needed for the next Level
+     * @param e 
+     */
+    private void changeNextExp(int e) {
+        nextExp = e;
+    }
+    
+    /**
+     * Get the Current Exp
+     * @return 
+     */
+    public int getExp() {
+        return currentExp;
+    }
+    
+    /**
+     * Set new Current Exp
+     * @param e 
+     */
+    public void changeExp(int e) {
+        currentExp = e;
+        while(currentExp >= nextExp) {
+            changeLevel(level + 1);
+        }
+    }
+    
+    // Stats - Fundamental
     
     /**
      * Returns Max Health of the Character
