@@ -22,7 +22,7 @@ public class GUI extends Identifiable {
     
     private final int regenChance = 3;
     
-    private final int width = 75; 
+    private final int width = 100; 
     private final int capSize = 2;
     private final char horBar = '~';
     private final char verBar = '|';
@@ -61,6 +61,8 @@ public class GUI extends Identifiable {
         FirstGreeting,
         Greeting,
         Passive,
+        Shop,
+        Inn,
         Battle,
         Attacking,
         Defending,
@@ -82,7 +84,14 @@ public class GUI extends Identifiable {
                 break;
             case Greeting: output += GreetingGUI();
                 break;
-            case Passive: output += PassiveGUI();
+            case Passive: {
+            try {
+                output += PassiveGUI();
+            } catch (Unidentified e) {
+                    System.out.println(escapeChar + "[31m" + "Passive Error: " + e.getMessage());
+                    System.exit(0);
+                }
+        }
                 break;
             case Battle: {
                 try {
@@ -98,6 +107,7 @@ public class GUI extends Identifiable {
                     output += AttackingGUI();
                 } catch (Unidentified e) {
                     System.out.println(escapeChar + "[31m" + "Attacking Error: " + e.getMessage());
+                    System.exit(0);
                 }
             }
                 break;
@@ -106,6 +116,7 @@ public class GUI extends Identifiable {
                     output += DefendingGUI();
                 } catch (Unidentified e) {
                     System.out.println(escapeChar + "[31m" + "Defending Error: " + e.getMessage());
+                    System.exit(0);
                 }
             }
                 break;
@@ -114,6 +125,7 @@ public class GUI extends Identifiable {
                     output += FleeingGUI();
                 } catch(Unidentified e) {
                     System.out.println(escapeChar + "[31m" + "Fleeing Error: " + e.getMessage());
+                    System.exit(0);
                 }
             }
                 break;
@@ -122,6 +134,7 @@ public class GUI extends Identifiable {
                     output += BattleWonGUI();
                 } catch(Unidentified e) {
                     System.out.println(escapeChar + "[31m" + "BattleWon Error: " + e.getMessage());
+                    System.exit(0);
                 }
             }
                 break;
@@ -133,6 +146,7 @@ public class GUI extends Identifiable {
                     output += LevelUpGUI();
                 } catch (Unidentified e) {
                     System.out.println(escapeChar + "[31m" + "LevelUp Error: " + e.getMessage());
+                    System.exit(0);
                 }
             }
                 break;
@@ -148,6 +162,8 @@ public class GUI extends Identifiable {
     
     // User Interface Elements
     
+    private final String unknown = "Answer Unknown";
+    
     /**
      * Fetches and returns a Name, using the current line and ending with a new one
      * @return 
@@ -158,6 +174,46 @@ public class GUI extends Identifiable {
         String name = ui.nextLine();
         
         return name;
+    }
+    
+    /**
+     * Fetches and returns a State, using the options given in PassiveGUI, and only if the option is available; MUST BE UPDATED IF OPTIONS ARE CHANGED
+     * @param options Truth values for availability of each option in order: Battle, Shop, Inn
+     * @throws Unidentified 
+     */
+    private void passiveOptions(boolean[] options) throws Unidentified {
+        String unavailable = "Option Unavailable";
+        System.out.print("Select Option: ");
+        switch(ui.nextLine().toLowerCase()) {
+            case "a": {
+                    if(options[0]) {
+                        changeState(State.Battle);
+                    }
+                    else {
+                        throw new Unidentified(unavailable);
+                    }
+                }
+                break;
+            case "b": {
+                    if(options[1]) {
+                        changeState(State.Shop);
+                    }
+                    else {
+                        throw new Unidentified(unavailable);
+                    }
+                }
+                break;
+            case "c": {
+                    if(options[2]) {
+                        changeState(State.Inn);
+                    }
+                    else {
+                        throw new Unidentified(unavailable);
+                    }
+                }
+                break;
+            default: throw new Unidentified(unknown);
+        }
     }
     
     /**
@@ -173,7 +229,7 @@ public class GUI extends Identifiable {
             case "a": return State.Attacking;
             case "b": return State.Defending;
             case "c": return State.Fleeing;
-            default: throw new Unidentified("Answer Unknown");
+            default: throw new Unidentified(unknown);
         }
         
     }
@@ -193,7 +249,7 @@ public class GUI extends Identifiable {
                 break;
             case "d": character.changeMaxHealth(character.getMaxHealth() + 5);
                 break;
-            default: throw new Unidentified("Answer Unknown");
+            default: throw new Unidentified(unknown);
         }
     }
     
@@ -234,15 +290,55 @@ public class GUI extends Identifiable {
         output += bodyLine(message);
         output += divider();
         
-        changeState(State.Battle);
+        changeState(State.Passive);
         
         return output;
     }
     
-    private String PassiveGUI() {
+    /**
+     * Runs if currentState is Passive; this states Character Name, Gold, Level, and Exp, then gives options for how to continue, availability determined by percent chances
+     * @return
+     * @throws Unidentified 
+     */
+    private String PassiveGUI() throws Unidentified {
         String output = "";
         
-        changeState(State.Battle);
+        // Monster, Shop, Inn
+        boolean[] visible = new boolean[3];
+        int[] chances = {100, 20, 33};
+        for(int i = 0; i < visible.length; ++i) {
+            visible[i] = rand.nextDouble() <= ((double)chances[i]/100);
+        }
+        
+        output += divider();
+        String[] stats = {character.getName(), "Gold: " + character.getGold(), "Level: " + character.getLevel(), "Exp: " + character.getExp() + "/" + character.getNextExp()};
+        output += partitionedLine(stats, 2);
+        String message = "Choose an option:";
+        output += bodyLine(message);
+        String[] options = new String[visible.length];
+        if(visible[0]) {
+            options[0] = "A: Fight a Monster!";
+        }
+        else {
+            options[0] = "No Monsters Available";
+        }
+        if(visible[1]) {
+            options[1] = "B: Visit the Shop";
+        }
+        else {
+            options[1] = "No Shop Available";
+        }
+        if(visible[2]) {
+            options[2] = "C: Stay at the Inn";
+        }
+        else {
+            options[2] = "No Inn Available";
+        }
+        output += optionsLine(options);
+        System.out.println(output);
+        output = "";
+        passiveOptions(visible);
+        
         
         return output;
     }
