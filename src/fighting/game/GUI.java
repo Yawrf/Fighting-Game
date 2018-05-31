@@ -61,6 +61,7 @@ public class GUI extends Identifiable {
         FirstGreeting,
         Greeting,
         Passive,
+        PassiveBack,
         Shop,
         Inn,
         Battle,
@@ -85,13 +86,24 @@ public class GUI extends Identifiable {
             case Greeting: output += GreetingGUI();
                 break;
             case Passive: {
-            try {
-                output += PassiveGUI();
-            } catch (Unidentified e) {
+                try {
+                    output += PassiveGUI();
+                } catch (Unidentified e) {
                     System.out.println(escapeChar + "[31m" + "Passive Error: " + e.getMessage());
                     System.exit(0);
                 }
-        }
+            }
+                break;
+            case PassiveBack: {
+                try {
+                    output += PassiveBackGUI();
+                } catch (Unidentified e) {
+                    System.out.println(escapeChar + "[31m" + "PassiveBack Error: " + e.getMessage());
+                    System.exit(0);
+                }
+            }
+                break;
+            case Shop: output += ShopGUI();
                 break;
             case Battle: {
                 try {
@@ -295,6 +307,7 @@ public class GUI extends Identifiable {
         return output;
     }
     
+    private boolean[] visible;
     /**
      * Runs if currentState is Passive; this states Character Name, Gold, Level, and Exp, then gives options for how to continue, availability determined by percent chances
      * @return
@@ -304,7 +317,7 @@ public class GUI extends Identifiable {
         String output = "";
         
         // Monster, Shop, Inn
-        boolean[] visible = new boolean[3];
+        visible = new boolean[3];
         int[] chances = {100, 20, 33};
         for(int i = 0; i < visible.length; ++i) {
             visible[i] = rand.nextDouble() <= ((double)chances[i]/100);
@@ -339,6 +352,64 @@ public class GUI extends Identifiable {
         output = "";
         passiveOptions(visible);
         
+        
+        return output;
+    }
+    
+    /**
+     * Runs if currentState is PassiveBack to return to Passive from Shop and Inn; this states Character Name, Gold, Level, and Exp, then gives options for how to continue, availability determined by boolean[] visible
+     * @return
+     * @throws Unidentified 
+     */
+    private String PassiveBackGUI() throws Unidentified {
+        String output = "";
+        
+        output += divider();
+        String[] stats = {character.getName(), "Gold: " + character.getGold(), "Level: " + character.getLevel(), "Exp: " + character.getExp() + "/" + character.getNextExp()};
+        output += partitionedLine(stats, 2);
+        String message = "Choose an option:";
+        output += bodyLine(message);
+        String[] options = new String[visible.length];
+        if(visible[0]) {
+            options[0] = "A: Fight a Monster!";
+        }
+        else {
+            options[0] = "No Monsters Available";
+        }
+        if(visible[1]) {
+            options[1] = "B: Visit the Shop";
+        }
+        else {
+            options[1] = "No Shop Available";
+        }
+        if(visible[2]) {
+            options[2] = "C: Stay at the Inn";
+        }
+        else {
+            options[2] = "No Inn Available";
+        }
+        output += optionsLine(options);
+        System.out.println(output);
+        output = "";
+        passiveOptions(visible);
+        
+        
+        return output;
+    }
+    
+    /**
+     * Runs if currentState is Shop; currently is deactivated, stating as much and returning to Passive
+     * @return 
+     */
+    private String ShopGUI() {
+        String output = "";
+        
+        output += divider();
+        String message = "Shop is currently deactivated due to the game not being ready for it yet";
+        output += bodyLine(message);
+        output += divider();
+        
+        changeState(State.PassiveBack);
         
         return output;
     }
