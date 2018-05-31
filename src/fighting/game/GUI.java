@@ -63,7 +63,9 @@ public class GUI extends Identifiable {
         Passive,
         PassiveBack,
         Shop,
+        ShopBack,
         Inn,
+        InnBack,
         Battle,
         Attacking,
         Defending,
@@ -105,6 +107,27 @@ public class GUI extends Identifiable {
                 break;
             case Shop: output += ShopGUI();
                 break;
+            case ShopBack: output += ShopBackGUI();
+                break;
+            case Inn: {
+                try {
+                    output += InnGUI();
+                } catch (Unidentified e) {
+                    System.out.println(escapeChar + "[31m" + "Inn Error: " + e.getMessage());
+                    System.exit(0);
+                }
+            }
+                break;
+            case InnBack: {
+                try {
+                    output += InnBackGUI();
+                } catch (Unidentified e) {
+                    System.out.println(escapeChar + "[31m" + "InnBack Error: " + e.getMessage());
+                    System.exit(0);
+                }
+            }
+                break;
+                
             case Battle: {
                 try {
                     output += BattleGUI();
@@ -151,6 +174,7 @@ public class GUI extends Identifiable {
             }
                 break;
             case Fled: output += FledGUI();
+                break;
                 
                 
             case LevelUp: {
@@ -226,6 +250,93 @@ public class GUI extends Identifiable {
                 break;
             default: throw new Unidentified(unknown);
         }
+    }
+    
+    /**
+     * Fetches and returns a State, using the options given in PassiveGUI, and only if the option is available; MUST BE UPDATED IF OPTIONS ARE CHANGED
+     * @param options Truth values for availability of each option in order: Battle, Shop, Inn
+     * @throws Unidentified 
+     */
+    private void passiveBackOptions(boolean[] options) throws Unidentified {
+        String unavailable = "Option Unavailable";
+        System.out.print("Select Option: ");
+        switch(ui.nextLine().toLowerCase()) {
+            case "a": {
+                    if(options[0]) {
+                        changeState(State.Battle);
+                    }
+                    else {
+                        throw new Unidentified(unavailable);
+                    }
+                }
+                break;
+            case "b": {
+                    if(options[1]) {
+                        changeState(State.ShopBack);
+                    }
+                    else {
+                        throw new Unidentified(unavailable);
+                    }
+                }
+                break;
+            case "c": {
+                    if(options[2]) {
+                        changeState(State.InnBack);
+                    }
+                    else {
+                        throw new Unidentified(unavailable);
+                    }
+                }
+                break;
+            default: throw new Unidentified(unknown);
+        }
+    }
+    
+    /**
+     * Awaiting Completion of ShopGUI
+     */
+    private void shopOptions() {
+        
+    }
+    
+    /**
+     * Fetches and acts upon decision to stay in Inn
+     * @param cost Cost of Staying at Inn
+     * @return
+     * @throws Unidentified 
+     */
+    private String innOptions(int cost) throws Unidentified {
+        String output = "";
+        
+        output += divider();
+        System.out.print("Select Option: ");
+        switch(ui.nextLine().toLowerCase()) {
+            case "a": {
+                if(character.getGold() >= cost) {
+                    character.changeGold(character.getGold() - cost);
+                    String message = "You spent " + escapeChar + "[33m" + cost + escapeChar + "[30m" + " gold to spend the night.";
+                    String m2 = "You are now fully rested";
+                    output += bodyLine(message);
+                    character.changeHealth(character.getMaxHealth());
+                    output += bodyLine(m2);
+                }
+                else {
+                    String message = "Insufficient Funds";
+                    throw new Unidentified(message);
+                }
+            }
+                break;
+            case "b": {
+                String message = "You leave the inn";
+                output += bodyLine(message);
+            }
+                break;
+            default: throw new Unidentified(unknown);
+        }
+        output += divider();
+        changeState(State.PassiveBack);
+        
+        return output;
     }
     
     /**
@@ -391,7 +502,7 @@ public class GUI extends Identifiable {
         output += optionsLine(options);
         System.out.println(output);
         output = "";
-        passiveOptions(visible);
+        passiveBackOptions(visible);
         
         
         return output;
@@ -414,6 +525,78 @@ public class GUI extends Identifiable {
         return output;
     }
     
+    /**
+     * Runs if currentState is ShopBack to return to shop from PassiveBack; currently is deactivated, stating as much and returning to Passive
+     * @return 
+     */
+    private String ShopBackGUI() {
+        String output = "";
+        
+        output += divider();
+        String message = "Shop is currently deactivated due to the game not being ready for it yet";
+        output += bodyLine(message);
+        output += divider();
+        
+        changeState(State.PassiveBack);
+        
+        return output;
+    }
+    
+    private int innCost;
+    /**
+     * Runs if currentState is Inn; generates a cost based on level, along with variance based on level, then gives them the option to leave or stay
+     * Attempting to stay with insufficient funds will crash the game, because I'm being lazy right now
+     * @return
+     * @throws Unidentified 
+     */
+    private String InnGUI() throws Unidentified {
+        String output = "";
+        
+        output += divider();
+        int cost = 15 * character.getLevel();
+        int varianceUB = 5 * character.getLevel();
+        int varianceLB = -5 * character.getLevel();
+        cost += rand.nextInt(varianceUB + 1) + varianceLB;
+        innCost = cost;
+        String[] stats = {character.getName(), "Gold: " + character.getGold(), "Level: " + character.getLevel(), "Exp: " + character.getExp() + "/" + character.getNextExp()};
+        String message = "Hello! Staying at the inn will cost " + escapeChar + "[33m" + cost + escapeChar + "[30m" + " gold. Would you like to stay the night?";
+        output += partitionedLine(stats, 2);
+        output += bodyLine(message);
+        String[] options = {"A: Stay the Night", "B: Leave"};
+        output += optionsLine(options);
+        
+        System.out.println(output);
+        output = "";
+        output += innOptions(cost);
+        
+        return output;
+    }
+    
+    /**
+     * Runs if currentState is InnCost; retrieves last cost generated, then gives them the option to leave or stay
+     * Attempting to stay with insufficient funds will crash the game, because I'm being lazy right now
+     * @return
+     * @throws Unidentified 
+     */
+    private String InnBackGUI() throws Unidentified {
+        String output = "";
+        
+        output += divider();
+        int cost = innCost;
+        String[] stats = {character.getName(), "Gold: " + character.getGold(), "Level: " + character.getLevel(), "Exp: " + character.getExp() + "/" + character.getNextExp()};
+        String message = "Hello! Staying at the inn will cost " + escapeChar + "[33m" + cost + escapeChar + "[30m" + " gold. Would you like to stay the night?";
+        output += partitionedLine(stats, 2);
+        output += bodyLine(message);
+        String[] options = {"A: Stay the Night", "B: Leave"};
+        output += optionsLine(options);
+        
+        System.out.println(output);
+        output = "";
+        output += innOptions(cost);
+        
+        return output;
+    }
+    
     private ArrayList<Integer> monsterIDs = new ArrayList<>();
     private Integer monsterID = null;
     /**
@@ -429,7 +612,7 @@ public class GUI extends Identifiable {
             monsterIDs.add(monsterID);
         }
         Monster m = Distributor.getMonster(monsterID);
-        String[] names = {character.getName(), m.getName()};
+        String[] names = {character.getName(), escapeChar + "[31m" + m.getName() + escapeChar + "[30m"};
         String[] health = {character.getHealth() + "/" + character.getMaxHealth() + " HP", m.getHealth() + "/" + m.getMaxHealth() + " HP"};
         String[] strength = {"Str: " + character.getStrength(), "Str: " + m.getStrength()};
         String[] defense = {"Def: " + character.getDefense(), "Def: " + m.getDefense()};
@@ -471,7 +654,7 @@ public class GUI extends Identifiable {
         if(attackDamage < 0) {
             attackDamage = 0;
         }
-        String attack = character.getName() + " attacks " + m.getName() + " for " + escapeChar + "[31m" + attackDamage + escapeChar + "[30m" + " damage.";
+        String attack = character.getName() + " attacks " + escapeChar + "[31m" + m.getName() + escapeChar + "[30m" + " for " + escapeChar + "[31m" + attackDamage + escapeChar + "[30m" + " damage.";
         m.changeHealth(m.getHealth() - attackDamage);
         output += bodyLine(attack);
         if(m.getHealth() > 0) {
@@ -479,7 +662,7 @@ public class GUI extends Identifiable {
             if(defenseDamage < 0) {
                 defenseDamage = 0;
             }
-            String defense = m.getName() + " attacks " + character.getName() + " for " + escapeChar + "[31m" + defenseDamage + escapeChar + "[30m" + " damage.";
+            String defense = escapeChar + "[31m" + m.getName() + escapeChar + "[30m" + " attacks " + character.getName() + " for " + escapeChar + "[31m" + defenseDamage + escapeChar + "[30m" + " damage.";
             character.changeHealth(character.getHealth() - defenseDamage);
             output += bodyLine(defense);
         }
@@ -529,7 +712,7 @@ public class GUI extends Identifiable {
         if(defenseDamage < 0) {
             defenseDamage = 0;
         }
-        String defense = m.getName() + " attacks " + character.getName() + " for " + escapeChar + "[31m" + defenseDamage + escapeChar + "[30m" + " damage.";
+        String defense = escapeChar + "[31m" + m.getName() + escapeChar + "[30m" + " attacks " + character.getName() + " for " + escapeChar + "[31m" + defenseDamage + escapeChar + "[30m" + " damage.";
         character.changeHealth(character.getHealth() - defenseDamage);
         output += bodyLine(defense);
         if(character.getHealth() > 0 && character.getHealth() < character.getMaxHealth()) {
@@ -585,7 +768,7 @@ public class GUI extends Identifiable {
             if(defenseDamage < 0) {
                 defenseDamage = 0;
             }
-            String defense = m.getName() + " attacks " + character.getName() + " for " + escapeChar + "[31m" + defenseDamage + escapeChar + "[30m" + " damage.";
+            String defense = escapeChar + "[31m" + m.getName() + escapeChar + "[30m" + " attacks " + character.getName() + " for " + escapeChar + "[31m" + defenseDamage + escapeChar + "[30m" + " damage.";
             character.changeHealth(character.getHealth() - defenseDamage);
             output += bodyLine(defense);
             if(character.getHealth() > 0 && character.getHealth() < character.getMaxHealth()) {
