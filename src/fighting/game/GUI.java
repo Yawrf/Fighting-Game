@@ -87,104 +87,33 @@ public class GUI extends Identifiable {
                 break;
             case Greeting: output += GreetingGUI();
                 break;
-            case Passive: {
-                try {
-                    output += PassiveGUI();
-                } catch (Unidentified e) {
-                    System.out.println(escapeChar + "[31m" + "Passive Error: " + e.getMessage());
-                    System.exit(0);
-                }
-            }
+            case Passive: output += PassiveGUI();
                 break;
-            case PassiveBack: {
-                try {
-                    output += PassiveBackGUI();
-                } catch (Unidentified e) {
-                    System.out.println(escapeChar + "[31m" + "PassiveBack Error: " + e.getMessage());
-                    System.exit(0);
-                }
-            }
+            case PassiveBack: output += PassiveBackGUI();
                 break;
             case Shop: output += ShopGUI();
                 break;
             case ShopBack: output += ShopBackGUI();
                 break;
-            case Inn: {
-                try {
-                    output += InnGUI();
-                } catch (Unidentified e) {
-                    System.out.println(escapeChar + "[31m" + "Inn Error: " + e.getMessage());
-                    System.exit(0);
-                }
-            }
+            case Inn: output += InnGUI();
                 break;
-            case InnBack: {
-                try {
-                    output += InnBackGUI();
-                } catch (Unidentified e) {
-                    System.out.println(escapeChar + "[31m" + "InnBack Error: " + e.getMessage());
-                    System.exit(0);
-                }
-            }
+            case InnBack: output += InnBackGUI();
                 break;
-                
-            case Battle: {
-                try {
-                    output += BattleGUI();
-                } catch (Unidentified e) {
-                    System.out.println(escapeChar + "[31m" + "Battle Error: " + e.getMessage());
-                    System.exit(0);
-                }
-            }
+            case Battle: output += BattleGUI();
                 break;
-            case Attacking: {
-                try {
-                    output += AttackingGUI();
-                } catch (Unidentified e) {
-                    System.out.println(escapeChar + "[31m" + "Attacking Error: " + e.getMessage());
-                    System.exit(0);
-                }
-            }
+            case Attacking: output += AttackingGUI();
                 break;
-            case Defending: {
-                try {
-                    output += DefendingGUI();
-                } catch (Unidentified e) {
-                    System.out.println(escapeChar + "[31m" + "Defending Error: " + e.getMessage());
-                    System.exit(0);
-                }
-            }
+            case Defending: output += DefendingGUI();
                 break;
-            case Fleeing: {
-                try {
-                    output += FleeingGUI();
-                } catch(Unidentified e) {
-                    System.out.println(escapeChar + "[31m" + "Fleeing Error: " + e.getMessage());
-                    System.exit(0);
-                }
-            }
+            case Fleeing: output += FleeingGUI();
                 break;
-            case BattleWon: {
-                try {
-                    output += BattleWonGUI();
-                } catch(Unidentified e) {
-                    System.out.println(escapeChar + "[31m" + "BattleWon Error: " + e.getMessage());
-                    System.exit(0);
-                }
-            }
+            case BattleWon: output += BattleWonGUI();
                 break;
             case Fled: output += FledGUI();
                 break;
                 
                 
-            case LevelUp: {
-                try {
-                    output += LevelUpGUI();
-                } catch (Unidentified e) {
-                    System.out.println(escapeChar + "[31m" + "LevelUp Error: " + e.getMessage());
-                    System.exit(0);
-                }
-            }
+            case LevelUp: output += LevelUpGUI();
                 break;
             case Dead: output += DeadGUI();
                 break;
@@ -196,9 +125,10 @@ public class GUI extends Identifiable {
     }
     
     
+    
     // User Interface Elements
     
-    private final String unknown = "Answer Unknown";
+    private final String unknown = escapeChar + "[31m" + "Answer Unknown" + escapeChar + "[30m";
     
     /**
      * Fetches and returns a Name, using the current line and ending with a new one
@@ -217,38 +147,44 @@ public class GUI extends Identifiable {
      * @param options Truth values for availability of each option in order: Battle, Shop, Inn
      * @throws Unidentified 
      */
-    private void passiveOptions(boolean[] options) throws Unidentified {
-        String unavailable = "Option Unavailable";
-        System.out.print("Select Option: ");
-        switch(ui.nextLine().toLowerCase()) {
-            case "a": {
-                    if(options[0]) {
-                        changeState(State.Battle);
+    private void passiveOptions(boolean[] options) {
+        String unavailable = escapeChar + "[31m" + "Option Unavailable" + escapeChar + "[30m";
+        boolean done = false;
+        while(!done) {
+            System.out.print("Select Option: ");
+            switch(ui.nextLine().toLowerCase()) {
+                case "a": {
+                        if(options[0]) {
+                            changeState(State.Battle);
+                            done = true;
+                        }
+                        else {
+                            System.out.println(unavailable);
+                        }
                     }
-                    else {
-                        throw new Unidentified(unavailable);
+                    break;
+                case "b": {
+                        if(options[1]) {
+                            changeState(State.Shop);
+                            done = true;
+                        }
+                        else {
+                            System.out.println(unavailable);
+                        }
                     }
-                }
-                break;
-            case "b": {
-                    if(options[1]) {
-                        changeState(State.Shop);
+                    break;
+                case "c": {
+                        if(options[2]) {
+                            changeState(State.Inn);
+                            done = true;
+                        }
+                        else {
+                            System.out.println(unavailable);
+                        }
                     }
-                    else {
-                        throw new Unidentified(unavailable);
-                    }
-                }
-                break;
-            case "c": {
-                    if(options[2]) {
-                        changeState(State.Inn);
-                    }
-                    else {
-                        throw new Unidentified(unavailable);
-                    }
-                }
-                break;
-            default: throw new Unidentified(unknown);
+                    break;
+                default: System.out.println(unknown);
+            }
         }
     }
     
@@ -257,38 +193,44 @@ public class GUI extends Identifiable {
      * @param options Truth values for availability of each option in order: Battle, Shop, Inn
      * @throws Unidentified 
      */
-    private void passiveBackOptions(boolean[] options) throws Unidentified {
-        String unavailable = "Option Unavailable";
-        System.out.print("Select Option: ");
-        switch(ui.nextLine().toLowerCase()) {
-            case "a": {
-                    if(options[0]) {
-                        changeState(State.Battle);
+    private void passiveBackOptions(boolean[] options) {
+        String unavailable = escapeChar + "[31m" + "Option Unavailable" + escapeChar + "[30m";
+        boolean done = false;
+        while(!done) {
+            System.out.print("Select Option: ");
+            switch(ui.nextLine().toLowerCase()) {
+                case "a": {
+                        if(options[0]) {
+                            changeState(State.Battle);
+                            done = true;
+                        }
+                        else {
+                            System.out.println(unavailable);
+                        }
                     }
-                    else {
-                        throw new Unidentified(unavailable);
+                    break;
+                case "b": {
+                        if(options[1]) {
+                            changeState(State.ShopBack);
+                            done = true;
+                        }
+                        else {
+                            System.out.println(unavailable);
+                        }
                     }
-                }
-                break;
-            case "b": {
-                    if(options[1]) {
-                        changeState(State.ShopBack);
+                    break;
+                case "c": {
+                        if(options[2]) {
+                            changeState(State.InnBack);
+                            done = true;
+                        }
+                        else {
+                            System.out.println(unavailable);
+                        }
                     }
-                    else {
-                        throw new Unidentified(unavailable);
-                    }
-                }
-                break;
-            case "c": {
-                    if(options[2]) {
-                        changeState(State.InnBack);
-                    }
-                    else {
-                        throw new Unidentified(unavailable);
-                    }
-                }
-                break;
-            default: throw new Unidentified(unknown);
+                    break;
+                default: System.out.println(unknown);
+            }
         }
     }
     
@@ -305,34 +247,41 @@ public class GUI extends Identifiable {
      * @return
      * @throws Unidentified 
      */
-    private String innOptions(int cost) throws Unidentified {
+    private String innOptions(int cost) {
         String output = "";
         
         output += divider();
-        System.out.print("Select Option: ");
-        switch(ui.nextLine().toLowerCase()) {
-            case "a": {
-                if(character.getGold() >= cost) {
-                    character.changeGold(character.getGold() - cost);
-                    String message = "You spent " + escapeChar + "[33m" + cost + escapeChar + "[30m" + " gold to spend the night.";
-                    String m2 = "You are now fully rested";
+        
+        boolean done = false;
+        while(!done) {
+            System.out.print("Select Option: ");
+            switch(ui.nextLine().toLowerCase()) {
+                case "a": {
+                    if(character.getGold() >= cost) {
+                        character.changeGold(character.getGold() - cost);
+                        String message = "You spent " + escapeChar + "[33m" + cost + escapeChar + "[30m" + " gold to spend the night.";
+                        String m2 = "You are now fully rested";
+                        output += bodyLine(message);
+                        character.changeHealth(character.getMaxHealth());
+                        output += bodyLine(m2);
+                        done = true;
+                    }
+                    else {
+                        String message = escapeChar + "[31m" + "Insufficient Funds" + escapeChar + "[30m";
+                        System.out.println(message);
+                    }
+                }
+                    break;
+                case "b": {
+                    String message = "You leave the inn";
                     output += bodyLine(message);
-                    character.changeHealth(character.getMaxHealth());
-                    output += bodyLine(m2);
+                        done = true;
                 }
-                else {
-                    String message = "Insufficient Funds";
-                    throw new Unidentified(message);
-                }
+                    break;
+                default: System.out.println(unknown);
             }
-                break;
-            case "b": {
-                String message = "You leave the inn";
-                output += bodyLine(message);
-            }
-                break;
-            default: throw new Unidentified(unknown);
         }
+        
         output += divider();
         changeState(State.PassiveBack);
         
@@ -344,15 +293,16 @@ public class GUI extends Identifiable {
      * @return
      * @throws Unidentified 
      */
-    private State selectBattleOption() throws Unidentified {
+    private State selectBattleOption() {
         
-        System.out.print("Select Option: ");
-        String temp = ui.nextLine();
-        switch(temp.toLowerCase()) {
-            case "a": return State.Attacking;
-            case "b": return State.Defending;
-            case "c": return State.Fleeing;
-            default: throw new Unidentified(unknown);
+        while(true) {
+            System.out.print("Select Option: ");
+            switch(ui.nextLine().toLowerCase()) {
+                case "a": return State.Attacking;
+                case "b": return State.Defending;
+                case "c": return State.Fleeing;
+                default: System.out.println(unknown);
+            }
         }
         
     }
@@ -361,20 +311,25 @@ public class GUI extends Identifiable {
      * Fetches and upgrades a Character Stat
      * @throws Unidentified 
      */
-    private void statLevelUp() throws Unidentified {
-        System.out.print("Select Option: ");
-        switch(ui.nextLine().toLowerCase()) {
-            case "a": character.changeStrength(character.getStrength() + 1);
-                break;
-            case "b": character.changeDefense(character.getDefense() + 1);
-                break;
-            case "c": character.changeSpeed(character.getSpeed() + 1);
-                break;
-            case "d": character.changeMaxHealth(character.getMaxHealth() + 5);
-                break;
-            default: throw new Unidentified(unknown);
+    private void statLevelUp() {
+        boolean done = false;
+        while(!done) {
+            System.out.print("Select Option: ");
+            switch(ui.nextLine().toLowerCase()) {
+                case "a": {done = true; character.changeStrength(character.getStrength() + 1);}
+                    break;
+                case "b": {done = true; character.changeDefense(character.getDefense() + 1);}
+                    break;
+                case "c": {done = true; character.changeSpeed(character.getSpeed() + 1);}
+                    break;
+                case "d": {done = true; character.changeMaxHealth(character.getMaxHealth() + 5);}
+                    break;
+                default: System.out.println(unknown);
+            }
         }
     }
+    
+    
     
     // Construction Methods
     
@@ -424,7 +379,7 @@ public class GUI extends Identifiable {
      * @return
      * @throws Unidentified 
      */
-    private String PassiveGUI() throws Unidentified {
+    private String PassiveGUI() {
         String output = "";
         
         // Monster, Shop, Inn
@@ -472,7 +427,7 @@ public class GUI extends Identifiable {
      * @return
      * @throws Unidentified 
      */
-    private String PassiveBackGUI() throws Unidentified {
+    private String PassiveBackGUI() {
         String output = "";
         
         output += divider();
@@ -526,7 +481,7 @@ public class GUI extends Identifiable {
     }
     
     /**
-     * Runs if currentState is ShopBack to return to shop from PassiveBack; currently is deactivated, stating as much and returning to Passive
+     * Runs if currentState is ShopBack to return to shop from PassiveBack; currently is deactivated, stating as much and returning to PassiveBack
      * @return 
      */
     private String ShopBackGUI() {
@@ -549,7 +504,7 @@ public class GUI extends Identifiable {
      * @return
      * @throws Unidentified 
      */
-    private String InnGUI() throws Unidentified {
+    private String InnGUI() {
         String output = "";
         
         output += divider();
@@ -578,7 +533,7 @@ public class GUI extends Identifiable {
      * @return
      * @throws Unidentified 
      */
-    private String InnBackGUI() throws Unidentified {
+    private String InnBackGUI() {
         String output = "";
         
         output += divider();
@@ -604,7 +559,7 @@ public class GUI extends Identifiable {
      * @return
      * @throws Unidentified 
      */
-    private String BattleGUI() throws Unidentified {
+    private String BattleGUI() {
         String output = "";
         
         if(monsterID == null || Distributor.getMonster(monsterID).getDefeated()) {
@@ -644,7 +599,7 @@ public class GUI extends Identifiable {
      * @return
      * @throws Unidentified 
      */
-    private String AttackingGUI() throws Unidentified {
+    private String AttackingGUI() {
         String output = "";
         
         Monster m = Distributor.getMonster(monsterID);
@@ -698,7 +653,7 @@ public class GUI extends Identifiable {
      * @return
      * @throws Unidentified 
      */
-    private String DefendingGUI() throws Unidentified {
+    private String DefendingGUI() {
         String output = "";
         
         int defenseMultiplier = 2;
@@ -745,7 +700,7 @@ public class GUI extends Identifiable {
      * @return
      * @throws Unidentified 
      */
-    private String FleeingGUI() throws Unidentified {
+    private String FleeingGUI() {
         String output = "";
         
         Monster m = Distributor.getMonster(monsterID);
@@ -800,7 +755,7 @@ public class GUI extends Identifiable {
      * @return
      * @throws Unidentified 
      */
-    private String BattleWonGUI() throws Unidentified {
+    private String BattleWonGUI() {
         String output = "";
         
         int earnedBuffer = 5;
@@ -856,7 +811,7 @@ public class GUI extends Identifiable {
      * @return
      * @throws Unidentified 
      */
-    private String LevelUpGUI() throws Unidentified {
+    private String LevelUpGUI() {
         String output = "";
         
         for(int i = 0; i < character.getPointsPerLevel(); ++i) {
@@ -915,6 +870,8 @@ public class GUI extends Identifiable {
         
         return output;
     }
+    
+    
     
     // Construction Elements
     

@@ -20,6 +20,8 @@ public class Distributor {
     private final static HashMap<Integer, Character> Characters = new HashMap<>();
     private final static HashMap<Integer, Monster> Monsters = new HashMap<>();
     
+    private final static String error = "Object not found in Map";
+    
     
     /**
      * Adds a GUI to the GUI map, keyed to its ID
@@ -41,15 +43,15 @@ public class Distributor {
      * Gets a GUI from the list by the given key
      * @param id Key of the wanted GUI
      * @return 
-     * @throws Unidentified 
      */
-    public static GUI getGUI(int id) throws Unidentified {
+    public static GUI getGUI(int id) {
         GUI g;
         if(GUIs.containsKey(id)) {
             g = GUIs.get(id);
         }
         else {
-            throw new Unidentified("Object not found in Map");
+            g = null;
+            Unidentified(error);
         }
         return g;
     }
@@ -88,15 +90,15 @@ public class Distributor {
      * Gets a Character from the list by the given key
      * @param id Key of the wanted Character
      * @return
-     * @throws Unidentified 
      */
-    public static Character getCharacter(int id) throws Unidentified {
+    public static Character getCharacter(int id) {
         Character c;
         if(Characters.containsKey(id)) {
             c = Characters.get(id);
         }
         else {
-            throw new Unidentified("Object not found in Map");
+            c = null;
+            Unidentified(error);
         }
         return c;
     }
@@ -124,7 +126,7 @@ public class Distributor {
         
         int id = m.getID();
         if(Monsters.containsKey(id)) {
-            id = newCharacterID();
+            id = newMonsterID();
             m.changeID(id);
         }
         Monsters.put(id, m);
@@ -135,15 +137,15 @@ public class Distributor {
      * Gets a Monster from the list by the given key
      * @param id Key of the wanted Monster
      * @return
-     * @throws Unidentified 
      */
-    public static Monster getMonster(int id) throws Unidentified {
+    public static Monster getMonster(int id) {
         Monster m;
         if(Monsters.containsKey(id)) {
             m = Monsters.get(id);
         }
         else {
-            throw new Unidentified("Object not found in Map");
+            m = null;
+            Unidentified(error);
         }
         return m;
     }
@@ -160,6 +162,15 @@ public class Distributor {
         }
         
         return temp;
+    }
+    
+    /**
+     * Simulation of the Unidentified Exception to avoid throwing
+     * @param s 
+     */
+    private static void Unidentified(String s) {
+        System.out.println((char)27 + "[31m" + s + (char)27 + "[30m");
+        System.exit(0);
     }
     
 }
