@@ -129,17 +129,29 @@ public class GUI extends Identifiable {
     // User Interface Elements
     
     private final String unknown = escapeChar + "[31m" + "Answer Unknown" + escapeChar + "[30m";
+    private final String descriptionBreak = ":";
+    private final String helpMark = "?";
     
     /**
      * Fetches and returns a Name, using the current line and ending with a new one
      * @return 
      */
     private String getName() {
-        String prompt = "Name: ";
-        System.out.print(prompt);
-        String name = ui.nextLine();
-        
-        return name;
+        boolean done = false;
+        String temp = "";
+        while(!done) {
+            String prompt = "Name: ";
+            System.out.print(prompt);
+            temp = ui.nextLine();
+            if(temp.startsWith(helpMark)) {
+                String[] message = {"Name" + descriptionBreak + "Enter a name to be used, this will be used throughout the game"};
+                helpMenu(message);
+            }
+            else{
+                done = true;
+            }
+        }
+        return temp;
     }
     
     /**
@@ -182,6 +194,14 @@ public class GUI extends Identifiable {
                             System.out.println(unavailable);
                         }
                     }
+                    break;
+                case helpMark: {
+                    String battle = "Battle" + descriptionBreak + "Fight a Monster to get Gold and Exp!";
+                    String shop = "Shop" + descriptionBreak + "Buy gear to boost your stats!";
+                    String inn = "Inn" + descriptionBreak + "Sleep at the Inn to restore health!";
+                    String[] message = {battle, shop, inn};
+                    helpMenu(message);
+                }
                     break;
                 default: System.out.println(unknown);
             }
@@ -228,6 +248,14 @@ public class GUI extends Identifiable {
                             System.out.println(unavailable);
                         }
                     }
+                    break;
+                case helpMark: {
+                    String battle = "Battle" + descriptionBreak + "Fight a Monster to get Gold and Exp!";
+                    String shop = "Shop" + descriptionBreak + "Buy gear to boost your stats!";
+                    String inn = "Inn" + descriptionBreak + "Sleep at the Inn to restore health!";
+                    String[] message = {battle, shop, inn};
+                    helpMenu(message);
+                }
                     break;
                 default: System.out.println(unknown);
             }
@@ -278,6 +306,13 @@ public class GUI extends Identifiable {
                         done = true;
                 }
                     break;
+                case helpMark: {
+                    String stay = "Stay the Night" + descriptionBreak + "Spend " + escapeChar + "[33m" + cost + escapeChar + "[30m" + " gold to fully heal.";
+                    String leave = "Leave" + descriptionBreak + "Leave the Inn";
+                    String[] message = {stay, leave};
+                    helpMenu(message);
+                }
+                break;
                 default: System.out.println(unknown);
             }
         }
@@ -301,6 +336,17 @@ public class GUI extends Identifiable {
                 case "a": return State.Attacking;
                 case "b": return State.Defending;
                 case "c": return State.Fleeing;
+                case helpMark: {
+                    String attack = "Attack" + descriptionBreak + "Attack the monster and be attacked in turn. Each battler in turn attacks and defends.";
+                    String attack2 = descriptionBreak + "You have a chance to do critical damage, which will double your damage.";
+                    String defend = "Defend" + descriptionBreak + "Defending doubles your defense, Regen Chance, and Regen Amount,";
+                    String defend2 = descriptionBreak + "making it easier to significantly regain health.";
+                    String flee = "Flee" + descriptionBreak + "Run Away! Your speed is compared to your opponent's speed to determine";
+                    String flee2 = descriptionBreak + "your chance of success. You are attacked if you fail.";
+                    String[] message = {attack, attack2, defend, defend2, flee, flee2};
+                    helpMenu(message);
+                }
+                    break;
                 default: System.out.println(unknown);
             }
         }
@@ -324,9 +370,45 @@ public class GUI extends Identifiable {
                     break;
                 case "d": {done = true; character.changeMaxHealth(character.getMaxHealth() + 5);}
                     break;
+                case helpMark: {
+                    String strength = "Strength" + descriptionBreak + "Affects Damage";
+                    String defense = "Defense" + descriptionBreak + "Affects Damage Blocked and Regen Amount";
+                    String speed = "Speed" + descriptionBreak + "Affects success rate of Fleeing";
+                    String health = "Max Health" + descriptionBreak + "Affects how much Health you have";
+                    String[] message = {strength, defense, speed, health};
+                    helpMenu(message);
+                }
+                    break;
                 default: System.out.println(unknown);
             }
         }
+    }
+    
+    /**
+     * This will output a help menu listing each option and its description in a single line; If a description combined with the option then break it into another String starting with descriptionBreak;
+     * Do not include spaces around the descriptionBreak when formatting strings
+     * @param optionsDescriptions 
+     */
+    private void helpMenu(String[] optionsDescriptions) {
+        String output = "";
+        
+        output += divider();
+        String title = "Help Menu";
+        output += bodyLine(title);
+        String[] options = new String[optionsDescriptions.length];
+        String[] descriptions = new String[optionsDescriptions.length];
+        for(int i = 0; i < optionsDescriptions.length; ++i) {
+            String[] temp = optionsDescriptions[i].split(descriptionBreak);
+            options[i] = temp[0];
+            descriptions[i] = temp[1];
+        }
+        for(int i = 0; i < options.length; ++i) {
+            String message = options[i] + ">>  " + descriptions[i];
+            output += bodyLine(message);
+        }
+        output += divider();
+        
+        System.out.println(output);
     }
     
     
